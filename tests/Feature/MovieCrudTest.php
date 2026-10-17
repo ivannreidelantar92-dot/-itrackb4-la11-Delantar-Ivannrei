@@ -20,6 +20,7 @@ class MovieCrudTest extends TestCase
             'director' => 'Lana Wachowski',
             'genre' => 'Science Fiction',
             'rating' => '8.7/10',
+            'year' => 1999,
         ]);
 
         $response->assertRedirect(route('movies.index'));

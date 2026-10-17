@@ -66,6 +66,20 @@
             @enderror
         </div>
 
+        <div class="mb-3">
+            <label for="year" class="form-label">Year</label>
+            <input type="number"
+                   name="year"
+                   id="year"
+                   min="1888"
+                   max="{{ date('Y') }}"
+                   class="form-control @error('year') is-invalid @enderror"
+                   value="{{ old('year') }}">
+            @error('year')
+                <div class="text-danger small mt-1">{{ $message }}</div>
+            @enderror
+        </div>
+
         <button type="submit" class="btn btn-primary">Save Movie</button>
         <a href="{{ route('movies.index') }}" class="btn btn-secondary">Cancel</a>
     </form>

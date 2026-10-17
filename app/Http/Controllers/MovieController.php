@@ -20,7 +20,8 @@ class MovieController extends Controller
             $movies = array_values(array_filter($movies, function ($movie) use ($search) {
                 return stripos($movie['title'], $search) !== false
                     || stripos($movie['director'], $search) !== false
-                    || stripos($movie['genre'], $search) !== false;
+                    || stripos($movie['genre'], $search) !== false
+                    || stripos((string) ($movie['year'] ?? ''), $search) !== false;
             }));
         }
 
@@ -61,6 +62,7 @@ class MovieController extends Controller
             'director' => ['required', 'string', 'max:255'],
             'genre' => ['required', 'string', 'in:Action,Animation,Comedy,Drama,Science Fiction'],
             'rating' => ['required', 'string', 'max:20'],
+            'year' => ['required', 'integer', 'between:1888,'.date('Y')],
         ]);
 
         $movies = $this->readMovies();
@@ -72,6 +74,7 @@ class MovieController extends Controller
             'director' => $validated['director'],
             'genre' => $validated['genre'],
             'rating' => $validated['rating'],
+            'year' => (int) $validated['year'],
         ];
 
         $this->writeMovies($movies);

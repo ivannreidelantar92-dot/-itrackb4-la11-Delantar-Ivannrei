@@ -36,6 +36,7 @@ class MovieFeatureTest extends TestCase
             'director' => 'Denis Villeneuve',
             'genre' => 'Action',
             'rating' => '7.6/10',
+            'year' => 2015,
         ]);
 
         $response->assertRedirect('/movies');
@@ -43,5 +44,6 @@ class MovieFeatureTest extends TestCase
         $movies = json_decode(file_get_contents($this->movieFile), true);
         $this->assertNotNull($movies);
         $this->assertTrue(in_array('Sicario', array_column($movies, 'title')));
+        $this->assertSame(2015, $movies[array_key_last($movies)]['year']);
     }
 }

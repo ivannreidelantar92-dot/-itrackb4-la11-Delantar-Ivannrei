@@ -54,6 +54,7 @@
             <th>Title</th>
             <th>Director</th>
             <th>Genre</th>
+            <th>Year</th>
             <th>Rating</th>
         </tr>
 
@@ -63,11 +64,12 @@
                 <td>{{ $movie['title'] }}</td>
                 <td>{{ $movie['director'] }}</td>
                 <td>{{ $movie['genre'] }}</td>
+                <td>{{ $movie['year'] ?? '—' }}</td>
                 <td>{{ $movie['rating'] }}</td>
             </tr>
         @empty
             <tr>
-                <td colspan="5">No movies found.</td>
+                <td colspan="6">No movies found.</td>
             </tr>
         @endforelse
     </table>
