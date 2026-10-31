@@ -112,9 +112,9 @@
                 <tbody>
                     @foreach ($movies as $movie)
                         <tr>
-                            <td>{{ $movie['title'] }}</td>
-                            <td>{{ $movie['genre'] }}</td>
-                            <td>{{ $movie['rating'] }}</td>
+                            <td>{{ $movie->title }}</td>
+                            <td>{{ $movie->genres->pluck('name')->join(', ') }}</td>
+                            <td>{{ $movie->rating }}</td>
                         </tr>
                     @endforeach
                 </tbody>

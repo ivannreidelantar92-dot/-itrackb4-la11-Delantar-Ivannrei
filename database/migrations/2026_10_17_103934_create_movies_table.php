@@ -14,6 +14,7 @@ return new class extends Migration
             $table->string('director');
             $table->string('genre');
             $table->string('rating');
+            $table->unsignedSmallInteger('year')->nullable();
             $table->boolean('is_watched')->default(false);
             $table->timestamps();
         });

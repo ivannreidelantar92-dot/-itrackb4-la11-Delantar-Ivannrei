@@ -3,16 +3,7 @@
     $isMovies = request()->is('movies*') && !$isFeatured;
 @endphp
 
-<nav class="nav mb-3">
-    <a class="nav-link {{ $isMovies ? 'active fw-bold' : '' }}" href="{{ route('movies.index') }}">
-        Movies
-    </a>
-
-    <a class="nav-link {{ $isFeatured ? 'active fw-bold' : '' }}" href="{{ route('movies.featured') }}">
-        Featured
-    </a>
-
-    <a class="nav-link" href="{{ route('movies.show', ['movie' => 1]) }}">
-        Movie #1
-    </a>
+<nav class="site-nav" aria-label="Main navigation">
+    <a class="site-nav-link {{ $isMovies ? 'active' : '' }}" href="{{ route('movies.index') }}">My collection</a>
+    <a class="site-nav-link {{ $isFeatured ? 'active' : '' }}" href="{{ route('movies.featured') }}">Featured</a>
 </nav>

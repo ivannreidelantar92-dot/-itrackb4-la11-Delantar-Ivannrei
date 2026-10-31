@@ -26,9 +26,9 @@
             @forelse ($movies as $movie)
                 <tr>
                     <td>{{ $loop->iteration }}</td>
-                    <td>{{ $movie['title'] }}</td>
-                    <td>{{ $movie['director'] }}</td>
-                    <td>{{ $movie['genre'] }}</td>
+                    <td>{{ $movie->title }}</td>
+                    <td>{{ $movie->director }}</td>
+                    <td>{{ $movie->genres->pluck('name')->join(', ') }}</td>
                 </tr>
             @empty
                 <tr>

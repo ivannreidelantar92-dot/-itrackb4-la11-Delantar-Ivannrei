@@ -1,11 +1,14 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container mt-4" style="max-width: 600px;">
-    <h2 class="mb-4">Add New Movie</h2>
+<section class="form-page">
+    <a href="{{ route('movies.index') }}" class="back-link">← Back to collection</a>
+    <div class="form-card">
+        <p class="eyebrow">GROW YOUR LIBRARY</p>
+        <h2>Add a movie</h2>
+        <p class="section-subtitle">Save another story worth remembering.</p>
 
-    {{-- B3: POST method at route name sa action --}}
-    <form method="POST" action="{{ route('movies.store') }}">
+        <form method="POST" action="{{ route('movies.store') }}" class="movie-form">
         
         {{-- B4: @csrf security token --}}
         @csrf
@@ -38,16 +41,18 @@
 
         {{-- B2, B5, C3, D1, D4: Genre Dropdown --}}
         <div class="mb-3">
-            <label for="genre" class="form-label">Genre</label>
-            <select name="genre" id="genre" class="form-select @error('genre') is-invalid @enderror">
-                <option value="">-- Select Genre --</option>
-                <option value="Action" @selected(old('genre') == 'Action')>Action</option>
-                <option value="Animation" @selected(old('genre') == 'Animation')>Animation</option>
-                <option value="Comedy" @selected(old('genre') == 'Comedy')>Comedy</option>
-                <option value="Drama" @selected(old('genre') == 'Drama')>Drama</option>
-                <option value="Science Fiction" @selected(old('genre') == 'Science Fiction')>Science Fiction</option>
+            <label for="genre_ids" class="form-label">Genres</label>
+            <select name="genre_ids[]" id="genre_ids" multiple
+                    class="form-select @error('genre_ids') is-invalid @enderror @error('genre_ids.*') is-invalid @enderror">
+                @foreach ($genres as $genre)
+                    <option value="{{ $genre->id }}" @selected(in_array($genre->id, (array) old('genre_ids', [])))>{{ $genre->name }}</option>
+                @endforeach
             </select>
-            @error('genre')
+            <div class="form-text">Select one or more genres. Hold Ctrl (Windows) or Command (Mac) to choose multiple.</div>
+            @error('genre_ids')
+                <div class="text-danger small mt-1">{{ $message }}</div>
+            @enderror
+            @error('genre_ids.*')
                 <div class="text-danger small mt-1">{{ $message }}</div>
             @enderror
         </div>
@@ -80,8 +85,25 @@
             @enderror
         </div>
 
-        <button type="submit" class="btn btn-primary">Save Movie</button>
-        <a href="{{ route('movies.index') }}" class="btn btn-secondary">Cancel</a>
-    </form>
-</div>
+        <div class="mb-3">
+            <label for="image_url" class="form-label">Poster image URL</label>
+            <input type="url"
+                   name="image_url"
+                   id="image_url"
+                   placeholder="https://example.com/movie-poster.jpg"
+                   class="form-control @error('image_url') is-invalid @enderror"
+                   value="{{ old('image_url') }}">
+            <div class="form-text">Use a direct HTTPS link to an image you have permission to use.</div>
+            @error('image_url')
+                <div class="text-danger small mt-1">{{ $message }}</div>
+            @enderror
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="primary-action">Save movie</button>
+            <a href="{{ route('movies.index') }}" class="cancel-action">Cancel</a>
+        </div>
+        </form>
+    </div>
+</section>
 @endsection

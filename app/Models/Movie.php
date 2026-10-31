@@ -3,16 +3,17 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Movie extends Model
 {
     protected $fillable = [
         'title',
         'director',
-        'genre',
         'rating',
         'year',
         'is_watched',
+        'image_url',
     ];
 
     protected function casts(): array
@@ -21,5 +22,10 @@ class Movie extends Model
             'year' => 'integer',
             'is_watched' => 'boolean',
         ];
+    }
+
+    public function genres(): BelongsToMany
+    {
+        return $this->belongsToMany(Genre::class);
     }
 }

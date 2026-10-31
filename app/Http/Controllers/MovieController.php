@@ -2,48 +2,49 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Genre;
+use App\Models\Movie;
 use Illuminate\Http\Request;
 
 class MovieController extends Controller
 {
-
     public function index(Request $request)
     {
-        $allMovies = $this->readMovies();
         $search = trim((string) $request->query('search', ''));
-        $genre = $request->query('genre', 'all');
+        $genreId = $request->query('genre_id');
         $director = $request->query('director', 'all');
+        $genres = Genre::query()->orderBy('name')->get();
+        $directors = Movie::query()->distinct()->orderBy('director')->pluck('director')->all();
 
-        $movies = $allMovies;
+        $query = Movie::query();
 
         if ($search !== '') {
-            $movies = array_values(array_filter($movies, function ($movie) use ($search) {
-                return stripos($movie['title'], $search) !== false
-                    || stripos($movie['director'], $search) !== false
-                    || stripos($movie['genre'], $search) !== false
-                    || stripos((string) ($movie['year'] ?? ''), $search) !== false;
-            }));
+            $query->where(function ($query) use ($search) {
+                $query->where('title', 'like', "%{$search}%")
+                    ->orWhere('director', 'like', "%{$search}%")
+                    ->orWhere('year', 'like', "%{$search}%")
+                    ->orWhereHas('genres', function ($query) use ($search) {
+                        $query->where('name', 'like', "%{$search}%");
+                    });
+            });
         }
 
-        if ($genre !== 'all') {
-            $movies = array_values(array_filter($movies, function ($movie) use ($genre) {
-                return strcasecmp($movie['genre'], $genre) === 0;
-            }));
+        if ($genreId !== null && $genreId !== '' && $genreId !== 'all') {
+            $query->whereHas('genres', function ($query) use ($genreId) {
+                $query->where('genres.id', $genreId);
+            });
         }
 
         if ($director !== 'all') {
-            $movies = array_values(array_filter($movies, function ($movie) use ($director) {
-                return strcasecmp($movie['director'], $director) === 0;
-            }));
+            $query->where('director', $director);
         }
 
-        $genres = collect($allMovies)->pluck('genre')->unique()->sort()->values()->all();
-        $directors = collect($allMovies)->pluck('director')->unique()->sort()->values()->all();
+        $movies = $query->with('genres')->get();
 
         return view('movies.index', [
             'movies' => $movies,
             'search' => $search,
-            'genre' => $genre,
+            'genreId' => $genreId,
             'director' => $director,
             'genres' => $genres,
             'directors' => $directors,
@@ -52,7 +53,9 @@ class MovieController extends Controller
 
     public function create()
     {
-        return view('movies.create');
+        return view('movies.create', [
+            'genres' => Genre::query()->orderBy('name')->get(),
+        ]);
     }
 
     public function store(Request $request)
@@ -60,38 +63,27 @@ class MovieController extends Controller
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'director' => ['required', 'string', 'max:255'],
-            'genre' => ['required', 'string', 'in:Action,Animation,Comedy,Drama,Science Fiction'],
+            'genre_ids' => ['required', 'array', 'min:1'],
+            'genre_ids.*' => ['required', 'integer', 'distinct', 'exists:genres,id'],
             'rating' => ['required', 'string', 'max:20'],
             'year' => ['required', 'integer', 'between:1888,'.date('Y')],
+            'image_url' => ['required', 'url', 'starts_with:https://'],
         ]);
 
-        $movies = $this->readMovies();
-        $nextId = empty($movies) ? 1 : max(array_column($movies, 'id')) + 1;
+        $genreIds = $validated['genre_ids'];
+        unset($validated['genre_ids']);
 
-        $movies[] = [
-            'id' => $nextId,
-            'title' => $validated['title'],
-            'director' => $validated['director'],
-            'genre' => $validated['genre'],
-            'rating' => $validated['rating'],
-            'year' => (int) $validated['year'],
-        ];
-
-        $this->writeMovies($movies);
+        $movie = Movie::create($validated);
+        $movie->genres()->sync($genreIds);
 
         return redirect()->route('movies.index')->with('success', 'Movie added successfully.');
     }
 
     public function show(string $id)
     {
-        $movies = $this->readMovies();
-        $movie = collect($movies)->firstWhere('id', (int) $id);
-
-        if (!$movie) {
-            abort(404);
-        }
-
-        return view('movies.show', ['movie' => $movie]);
+        return view('movies.show', [
+            'movie' => Movie::with('genres')->findOrFail($id),
+        ]);
     }
 
     public function edit(string $id)
@@ -108,38 +100,8 @@ class MovieController extends Controller
 
     public function featured()
     {
-        $movies = $this->readMovies();
-        $movie = $movies[0] ?? null;
-
-        if (!$movie) {
-            abort(404);
-        }
+        $movie = Movie::with('genres')->firstOrFail();
 
         return view('movies.featured', ['movie' => $movie]);
-    }
-
-    private function readMovies()
-    {
-        $path = storage_path('movies.json');
-
-        if (!file_exists($path)) {
-            return [];
-        }
-
-        $content = file_get_contents($path);
-
-        if ($content === false || trim($content) === '') {
-            return [];
-        }
-
-        $movies = json_decode($content, true);
-
-        return is_array($movies) ? $movies : [];
-    }
-
-    private function writeMovies(array $movies): void
-    {
-        $path = storage_path('movies.json');
-        file_put_contents($path, json_encode($movies, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
     }
 }

@@ -3,75 +3,80 @@
 @section('title', 'Movies')
 
 @section('content')
-    <div class="mt-4 mb-3">
-        <a href="{{ route('movies.create') }}" class="btn btn-primary mb-3">Add Movie</a>
+    <section class="collection-heading">
+        <div>
+            <p class="eyebrow">THE LIBRARY</p>
+            <h2>My collection <span class="collection-count">{{ count($movies) }} films</span></h2>
+            <p class="section-subtitle">A handpicked collection of stories on screen.</p>
+        </div>
+        <a href="{{ route('movies.create') }}" class="primary-action"><span aria-hidden="true">＋</span> Add a movie</a>
+    </section>
 
-        <form method="GET" action="{{ route('movies.index') }}" class="mb-3">
-            <input type="text" name="search" class="form-control" placeholder="Search movie..." value="{{ $search }}">
-            <input type="hidden" name="genre" value="{{ $genre }}">
+    <section class="filter-panel">
+        <form method="GET" action="{{ route('movies.index') }}" class="search-form">
+            <label class="visually-hidden" for="movie-search">Search your collection</label>
+            <span class="search-icon" aria-hidden="true">⌕</span>
+            <input id="movie-search" type="search" name="search" placeholder="Search by title, director, genre or year..." value="{{ $search }}">
+            <input type="hidden" name="genre_id" value="{{ $genreId }}">
             <input type="hidden" name="director" value="{{ $director }}">
-            <button type="submit" class="btn btn-primary mt-2">Search</button>
+            <button type="submit" class="search-button">Search</button>
         </form>
 
-        <div class="mb-3">
-            <strong>Active filters:</strong>
-            @if ($genre !== 'all')
-                <span class="badge bg-primary me-2">Genre: {{ $genre }}</span>
-            @endif
-            @if ($director !== 'all')
-                <span class="badge bg-info text-dark me-2">Director: {{ $director }}</span>
-            @endif
-            @if ($search !== '')
-                <span class="badge bg-secondary me-2">Search: {{ $search }}</span>
-            @endif
-            @if ($genre === 'all' && $director === 'all' && $search === '')
-                <span class="badge bg-secondary">None</span>
-            @endif
+        <div class="filter-group">
+            <span class="filter-label">Genre</span>
+            <div class="filter-options">
+                <a href="{{ route('movies.index', ['search' => $search, 'director' => $director]) }}" class="filter-chip {{ empty($genreId) ? 'selected' : '' }}">All</a>
+                @foreach ($genres as $option)
+                    <a href="{{ route('movies.index', ['search' => $search, 'genre_id' => $option->id, 'director' => $director]) }}" class="filter-chip {{ (string) $genreId === (string) $option->id ? 'selected' : '' }}">{{ $option->name }}</a>
+                @endforeach
+            </div>
         </div>
 
-        <div class="mb-3">
-            <strong>Genre:</strong>
-            <a href="{{ route('movies.index', ['search' => $search, 'genre' => 'all', 'director' => $director]) }}" class="btn btn-sm {{ $genre === 'all' ? 'btn-primary' : 'btn-outline-primary' }}">All</a>
-            @foreach ($genres as $option)
-                <a href="{{ route('movies.index', ['search' => $search, 'genre' => $option, 'director' => $director]) }}" class="btn btn-sm {{ $genre === $option ? 'btn-primary' : 'btn-outline-primary' }}">{{ $option }}</a>
-            @endforeach
+        <div class="filter-group">
+            <span class="filter-label">Director</span>
+            <div class="filter-options">
+                <a href="{{ route('movies.index', ['search' => $search, 'genre_id' => $genreId, 'director' => 'all']) }}" class="filter-chip {{ $director === 'all' ? 'selected' : '' }}">All</a>
+                @foreach ($directors as $option)
+                    <a href="{{ route('movies.index', ['search' => $search, 'genre_id' => $genreId, 'director' => $option]) }}" class="filter-chip {{ $director === $option ? 'selected' : '' }}">{{ $option }}</a>
+                @endforeach
+            </div>
         </div>
 
-        <div class="mb-3">
-            <strong>Director:</strong>
-            <a href="{{ route('movies.index', ['search' => $search, 'genre' => $genre, 'director' => 'all']) }}" class="btn btn-sm {{ $director === 'all' ? 'btn-primary' : 'btn-outline-primary' }}">All</a>
-            @foreach ($directors as $option)
-                <a href="{{ route('movies.index', ['search' => $search, 'genre' => $genre, 'director' => $option]) }}" class="btn btn-sm {{ $director === $option ? 'btn-primary' : 'btn-outline-primary' }}">{{ $option }}</a>
-            @endforeach
-        </div>
+        @if (! empty($genreId) || $director !== 'all' || $search !== '')
+            <a href="{{ route('movies.index') }}" class="clear-filters">Clear filters <span aria-hidden="true">×</span></a>
+        @endif
+    </section>
 
-        <a href="{{ route('movies.index') }}" class="btn btn-secondary btn-sm">Clear all</a>
-    </div>
-
-    <table class="table table-striped mt-4" border="1" cellpadding="8">
-        <tr>
-            <th>#</th>
-            <th>Title</th>
-            <th>Director</th>
-            <th>Genre</th>
-            <th>Year</th>
-            <th>Rating</th>
-        </tr>
-
+    <section class="movie-grid" aria-label="Movies">
         @forelse ($movies as $movie)
-            <tr>
-                <td>{{ $loop->iteration }}</td>
-                <td>{{ $movie['title'] }}</td>
-                <td>{{ $movie['director'] }}</td>
-                <td>{{ $movie['genre'] }}</td>
-                <td>{{ $movie['year'] ?? '—' }}</td>
-                <td>{{ $movie['rating'] }}</td>
-            </tr>
+            <article class="movie-card">
+                <a class="movie-art" href="{{ route('movies.show', ['movie' => $movie->id]) }}" aria-label="View {{ $movie->title }}">
+                    <img src="{{ $movie->image_url }}" alt="{{ $movie->title }} poster" loading="lazy">
+                    <span class="art-caption">FEATURE NO. {{ str_pad((string) $loop->iteration, 2, '0', STR_PAD_LEFT) }}</span>
+                </a>
+                <div class="movie-info">
+                    <div class="movie-meta">
+                        <span>{{ $movie->year ?? 'Year unknown' }}</span>
+                        <span class="rating"><span aria-hidden="true">★</span> {{ $movie->rating }}</span>
+                    </div>
+                    <h3>{{ $movie->title }}</h3>
+                    <p class="movie-director">Directed by {{ $movie->director }}</p>
+                    <div class="movie-footer">
+                        @foreach ($movie->genres as $genre)
+                            <span class="genre-tag">{{ $genre->name }}</span>
+                        @endforeach
+                        <a class="details-link" href="{{ route('movies.show', ['movie' => $movie->id]) }}" aria-label="View {{ $movie->title }} details">View details <span aria-hidden="true">↗</span></a>
+                    </div>
+                </div>
+            </article>
         @empty
-            <tr>
-                <td colspan="6">No movies found.</td>
-            </tr>
+            <div class="empty-state">
+                <span class="empty-icon" aria-hidden="true">✦</span>
+                <h3>No movies found</h3>
+                <p>Try a different search or clear your filters to see your collection.</p>
+                <a href="{{ route('movies.index') }}" class="primary-action">Show all movies</a>
+            </div>
         @endforelse
-    </table>
+    </section>
 
 @endsection

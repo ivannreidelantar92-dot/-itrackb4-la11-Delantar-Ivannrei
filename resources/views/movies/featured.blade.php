@@ -3,19 +3,21 @@
 @section('title', 'Featured Movie')
 
 @section('content')
-    <div class="mt-4">
-        <h2>Featured Movie</h2>
-
-        <div class="card text-bg-light p-3 mt-3">
-            <h3>{{ $movie['title'] }}</h3>
-            <p><strong>Director:</strong> {{ $movie['director'] }}</p>
-            <p><strong>Genre:</strong> {{ $movie['genre'] }}</p>
-            <p><strong>Year:</strong> {{ $movie['year'] ?? '—' }}</p>
-            <p><strong>Rating:</strong> {{ $movie['rating'] }}</p>
-        </div>
-
-        <button class="btn btn-secondary mt-3">
-            <a href="{{ route('movies.index') }}" class="text-decoration-none text-white">Back</a>
-        </button>
-    </div>
+    <section class="featured-section">
+        <p class="eyebrow">EDITOR'S PICK</p>
+        <article class="featured-card">
+            <div class="featured-poster">
+                <img src="{{ $movie->image_url }}" alt="{{ $movie->title }} poster">
+            </div>
+            <div class="featured-copy">
+                <span class="featured-label">FEATURED MOVIE</span>
+                <h2>{{ $movie->title }}</h2>
+                <p class="detail-director">Directed by {{ $movie->director }}</p>
+                <p class="featured-meta">{{ $movie->genres->pluck('name')->join(', ') }} <span>·</span> {{ $movie->year ?? 'Year unknown' }}</p>
+                <span class="detail-rating"><span aria-hidden="true">★</span> {{ $movie->rating }}</span>
+                <a href="{{ route('movies.show', ['movie' => $movie->id]) }}" class="primary-action featured-action">Movie details <span aria-hidden="true">↗</span></a>
+            </div>
+        </article>
+        <a href="{{ route('movies.index') }}" class="back-link featured-back">← Back to collection</a>
+    </section>
 @endsection

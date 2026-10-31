@@ -1,13 +1,16 @@
 @extends('layouts.app')
-@section ('title', 'Movies')
+@section('title', $movie->title)
 @section('content')
-    <h1>{{ $movie['title'] }}</h1>
-    <p><strong>Director:</strong> {{ $movie['director'] }}</p>
-    <p><strong>Genre:</strong> {{ $movie['genre'] }}</p>
-    <p><strong>Year:</strong> {{ $movie['year'] ?? '—' }}</p>
-    <p><strong>Rating:</strong> {{ $movie['rating'] }}</p>
-
-    <p><a href="{{ route('movies.index') }}">Back to Movie List</a></p>
-<button class="btn btn-secondary"><a href="{{ route('movies.index') }}" class="text-decoration-none text-white">Back</a></button>
-
+    <a href="{{ route('movies.index') }}" class="back-link">← Back to collection</a>
+    <article class="movie-detail">
+        <div class="detail-poster">
+            <img src="{{ $movie->image_url }}" alt="{{ $movie->title }} poster">
+        </div>
+        <div class="detail-copy">
+            <p class="eyebrow">{{ $movie->genres->pluck('name')->join(', ') }} · {{ $movie->year ?? 'Year unknown' }}</p>
+            <h2>{{ $movie->title }}</h2>
+            <p class="detail-director">Directed by {{ $movie->director }}</p>
+            <span class="detail-rating"><span aria-hidden="true">★</span> {{ $movie->rating }}</span>
+        </div>
+    </article>
 @endsection
