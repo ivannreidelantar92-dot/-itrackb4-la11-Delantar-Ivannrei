@@ -29,6 +29,123 @@ class MovieFeatureTest extends TestCase
         $response->assertSee('Add a movie');
     }
 
+    public function test_edit_page_prefills_movie_fields_and_selects_its_genres(): void
+    {
+        $action = Genre::where('name', 'Action')->firstOrFail();
+        $drama = Genre::where('name', 'Drama')->firstOrFail();
+        $movie = Movie::create([
+            'title' => 'The Pirates',
+            'director' => 'A Director',
+            'rating' => '8/10',
+            'year' => 2020,
+            'image_url' => 'https://example.com/pirates.jpg',
+        ]);
+        $movie->genres()->attach([$action->id, $drama->id]);
+
+        $response = $this->get(route('movies.edit', $movie));
+
+        $response->assertOk()
+            ->assertSee('value="The Pirates"', false)
+            ->assertSee('value="A Director"', false)
+            ->assertSee('value="8/10"', false)
+            ->assertSee('value="2020"', false)
+            ->assertSee('value="https://example.com/pirates.jpg"', false)
+            ->assertSee('value="'.$action->id.'" selected', false)
+            ->assertSee('value="'.$drama->id.'" selected', false);
+    }
+
+    public function test_update_saves_movie_fields_and_syncs_genres(): void
+    {
+        $action = Genre::where('name', 'Action')->firstOrFail();
+        $comedy = Genre::where('name', 'Comedy')->firstOrFail();
+        $movie = Movie::create([
+            'title' => 'Old title',
+            'director' => 'Old director',
+            'rating' => '6/10',
+            'year' => 2010,
+            'image_url' => 'https://example.com/old.jpg',
+        ]);
+        $movie->genres()->attach($action);
+
+        $response = $this->put(route('movies.update', $movie), [
+            'title' => 'Updated title',
+            'director' => 'Updated director',
+            'genre_ids' => [$comedy->id],
+            'rating' => '9/10',
+            'year' => 2022,
+            'image_url' => 'https://example.com/updated.jpg',
+        ]);
+
+        $response->assertRedirect(route('movies.index'));
+        $this->assertDatabaseHas('movies', [
+            'id' => $movie->id,
+            'title' => 'Updated title',
+            'director' => 'Updated director',
+            'rating' => '9/10',
+            'year' => 2022,
+            'image_url' => 'https://example.com/updated.jpg',
+        ]);
+        $this->assertDatabaseHas('genre_movie', [
+            'movie_id' => $movie->id,
+            'genre_id' => $comedy->id,
+        ]);
+        $this->assertDatabaseMissing('genre_movie', [
+            'movie_id' => $movie->id,
+            'genre_id' => $action->id,
+        ]);
+    }
+
+    public function test_invalid_update_redirects_back_with_typed_values(): void
+    {
+        $action = Genre::where('name', 'Action')->firstOrFail();
+        $movie = Movie::create([
+            'title' => 'Original title',
+            'director' => 'Original director',
+            'rating' => '6/10',
+            'year' => 2010,
+            'image_url' => 'https://example.com/original.jpg',
+        ]);
+        $movie->genres()->attach($action);
+        $editUrl = route('movies.edit', $movie);
+
+        $response = $this->from($editUrl)->put(route('movies.update', $movie), [
+            'title' => '',
+            'director' => 'Typed director',
+            'genre_ids' => [$action->id],
+            'rating' => 'Typed rating',
+            'year' => 2022,
+            'image_url' => 'https://example.com/typed.jpg',
+        ]);
+
+        $response->assertRedirect($editUrl)
+            ->assertSessionHasErrors('title')
+            ->assertSessionHasInput('director', 'Typed director')
+            ->assertSessionHasInput('rating', 'Typed rating');
+        $this->assertDatabaseHas('movies', [
+            'id' => $movie->id,
+            'title' => 'Original title',
+        ]);
+    }
+
+    public function test_destroy_deletes_movie_and_redirects(): void
+    {
+        $action = Genre::where('name', 'Action')->firstOrFail();
+        $movie = Movie::create([
+            'title' => 'Movie to delete',
+            'director' => 'Director',
+            'rating' => '7/10',
+            'year' => 2020,
+            'image_url' => 'https://example.com/delete.jpg',
+        ]);
+        $movie->genres()->attach($action);
+
+        $response = $this->delete(route('movies.destroy', $movie));
+
+        $response->assertRedirect(route('movies.index'));
+        $this->assertDatabaseMissing('movies', ['id' => $movie->id]);
+        $this->assertDatabaseMissing('genre_movie', ['movie_id' => $movie->id]);
+    }
+
     public function test_store_saves_movie_and_redirects(): void
     {
         $genre = Genre::where('name', 'Action')->firstOrFail();

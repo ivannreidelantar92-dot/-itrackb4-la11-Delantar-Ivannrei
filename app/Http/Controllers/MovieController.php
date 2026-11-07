@@ -60,15 +60,7 @@ class MovieController extends Controller
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'title' => ['required', 'string', 'max:255'],
-            'director' => ['required', 'string', 'max:255'],
-            'genre_ids' => ['required', 'array', 'min:1'],
-            'genre_ids.*' => ['required', 'integer', 'distinct', 'exists:genres,id'],
-            'rating' => ['required', 'string', 'max:20'],
-            'year' => ['required', 'integer', 'between:1888,'.date('Y')],
-            'image_url' => ['required', 'url', 'starts_with:https://'],
-        ]);
+        $validated = $request->validate($this->movieRules());
 
         $genreIds = $validated['genre_ids'];
         unset($validated['genre_ids']);
@@ -79,23 +71,38 @@ class MovieController extends Controller
         return redirect()->route('movies.index')->with('success', 'Movie added successfully.');
     }
 
-    public function show(string $id)
+    public function show(Movie $movie)
     {
-        return view('movies.show', [
-            'movie' => Movie::with('genres')->findOrFail($id),
+        $movie->load('genres');
+
+        return view('movies.show', compact('movie'));
+    }
+
+    public function edit(Movie $movie)
+    {
+        return view('movies.edit', [
+            'movie' => $movie->load('genres'),
+            'genres' => Genre::query()->orderBy('name')->get(),
         ]);
     }
 
-    public function edit(string $id)
+    public function update(Request $request, Movie $movie)
     {
+        $validated = $request->validate($this->movieRules());
+        $genreIds = $validated['genre_ids'];
+        unset($validated['genre_ids']);
+
+        $movie->update($validated);
+        $movie->genres()->sync($genreIds);
+
+        return redirect()->route('movies.index')->with('success', 'Movie updated successfully.');
     }
 
-    public function update(Request $request, string $id)
+    public function destroy(Movie $movie)
     {
-    }
+        $movie->delete();
 
-    public function destroy(string $id)
-    {
+        return redirect()->route('movies.index')->with('success', 'Movie deleted successfully.');
     }
 
     public function featured()
@@ -103,5 +110,18 @@ class MovieController extends Controller
         $movie = Movie::with('genres')->firstOrFail();
 
         return view('movies.featured', ['movie' => $movie]);
+    }
+
+    private function movieRules(): array
+    {
+        return [
+            'title' => ['required', 'string', 'max:255'],
+            'director' => ['required', 'string', 'max:255'],
+            'genre_ids' => ['required', 'array', 'min:1'],
+            'genre_ids.*' => ['required', 'integer', 'distinct', 'exists:genres,id'],
+            'rating' => ['required', 'string', 'max:20'],
+            'year' => ['required', 'integer', 'between:1888,'.date('Y')],
+            'image_url' => ['required', 'url', 'starts_with:https://'],
+        ];
     }
 }

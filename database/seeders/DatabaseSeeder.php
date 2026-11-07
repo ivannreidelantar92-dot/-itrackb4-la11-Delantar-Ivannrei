@@ -77,7 +77,7 @@ class DatabaseSeeder extends Seeder
             'director' => 'Scott Waugh',
             'rating' => '9/10',
             'year' => 2025,
-            'image_url' => 'https://upload.wikimedia.org/wikipedia/en/c/c5/Runner_%282026_American_film%29_poster.jpg',
+            'image_url' => 'https://image.tmdb.org/t/p/w500/vJk2TW1QZAmBiD7oj9ZF9EPTYY1.jpg',
         ])->genres()->sync([$action->id, $adventure->id]);
         Movie::create([
             'title' => 'The Matrix',

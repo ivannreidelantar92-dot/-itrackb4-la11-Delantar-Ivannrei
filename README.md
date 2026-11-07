@@ -25,3 +25,17 @@ Before eager loading, the eight seeded movies require nine list queries: one que
 ### G3. Why can a movie have more than one genre?
 
 Movies and genres use a many-to-many relationship through the `genre_movie` pivot table. This lets one movie have genres such as Comedy, Action, and Historical Fiction, while each genre can be reused by many movies.
+
+## Lab Activity 11: Finish Your Own CRUD
+
+### G1. What two things does route model binding need?
+
+For a movie route such as `movies/{movie}`, the controller parameter must be type-hinted as `Movie` and named `$movie` to match the route segment. If the type or parameter name does not match, Laravel cannot bind the requested movie correctly, so the action will not receive the expected record.
+
+### G2. Why did the Delete link open the movie details instead of deleting it?
+
+A link sends a GET request, but the delete route for a movie expects DELETE. The same URL also has a GET route for showing that movie, so clicking the link opens its details instead of deleting it.
+
+### G3. What does the second argument to `old()` do on the edit form?
+
+The second argument supplies the saved movie value when the form is first opened, so leaving it out makes the edit fields appear blank. Using only the saved value instead of `old()` would discard what I typed after validation fails; `old('field', $movie->field)` preserves submitted input first and uses the movie value as the fallback.

@@ -67,6 +67,14 @@
                         @endforeach
                         <a class="details-link" href="{{ route('movies.show', ['movie' => $movie->id]) }}" aria-label="View {{ $movie->title }} details">View details <span aria-hidden="true">↗</span></a>
                     </div>
+                    <div class="d-flex align-items-center gap-2 mt-3">
+                        <a href="{{ route('movies.edit', $movie) }}" class="btn btn-outline-primary btn-sm">Edit</a>
+                        <form action="{{ route('movies.destroy', $movie) }}" method="POST" onsubmit="return confirm('Delete this movie?')">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                        </form>
+                    </div>
                 </div>
             </article>
         @empty
